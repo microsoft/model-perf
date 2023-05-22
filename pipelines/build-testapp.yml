@@ -89,3 +89,15 @@ jobs:
 
   - publish: $(artifactDir)
     artifact: $(artifactName)
+
+  - task: GitHubRelease@1
+    inputs:
+      gitHubConnection: '$(github_connection)'
+      repositoryName: 'microsoft/model-perf'
+      action: 'create'
+      target: '709299f9eb9d4f4df951a6ab6226fc4ba0c619be'
+      tagSource: 'gitTag'
+      assets: '$(artifactDir)/$(artifactName).zip'
+      isDraft: true
+      changeLogCompareToRelease: 'lastFullRelease'
+      changeLogType: 'commitBased'
