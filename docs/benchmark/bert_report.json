@@ -1,0 +1,58 @@
+[
+    {
+        "model": "bert-base",
+        "params": 110106428,
+        "tokens": 4,
+        "flops": 873574660,
+        "avg_latency": 50.526468
+    },
+    {
+        "model": "bert-base",
+        "params": 110106428,
+        "tokens": 8,
+        "flops": 1747150856,
+        "avg_latency": 68.72303
+    },
+    {
+        "model": "bert-base",
+        "params": 110106428,
+        "tokens": 12,
+        "flops": 2621911308,
+        "avg_latency": 81.743227
+    },
+    {
+        "model": "bert-base",
+        "params": 110106428,
+        "tokens": 16,
+        "flops": 3497856016,
+        "avg_latency": 87.736619
+    },
+    {
+        "model": "bert-base",
+        "params": 110106428,
+        "tokens": 20,
+        "flops": 4374984980,
+        "avg_latency": 90.935076
+    },
+    {
+        "model": "bert-base",
+        "params": 110106428,
+        "tokens": 24,
+        "flops": 5253298200,
+        "avg_latency": 94.987712
+    },
+    {
+        "model": "bert-base",
+        "params": 110106428,
+        "tokens": 28,
+        "flops": 6132795676,
+        "avg_latency": 96.2999
+    },
+    {
+        "model": "bert-base",
+        "params": 110106428,
+        "tokens": 32,
+        "flops": 7013477408,
+        "avg_latency": 115.013686
+    }
+]

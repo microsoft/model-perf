@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "model-perf"
+version = "0.1rc1"
+authors = [{ name="Microsoft Corporation", email="ml-inference@microsoft.com" }]
+description = "Model Performance Toolkit (model-perf) is a Python package backed by test applications for different platforms (Windows/MacOS, Android/iOS, Web) to test machine learning models on different target platforms and devices (e.g., Google Pixel for Android, iPhone for iOS)."
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy",
+    "requests",
+    "psutil",
+    "msgpack >= 1.0",
+    "msgpack-numpy == 0.4.8",
+    "selenium >= 4.8.2", # for web validation
+    "webdriver-manager >= 3.8.5", # for web validation
+    "psutil >= 5.9.4"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/microsoft/model-perf"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+model_perf = ["lib/*.pyd", "lib/*.so", "lib/*.pdb"]
