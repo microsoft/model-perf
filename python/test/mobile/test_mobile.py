@@ -17,12 +17,16 @@ class TestMobile(unittest.TestCase):
 
     def setUp(self) -> None:
         self.root_dir = Path(__file__).parent / "../../.."
-        self.android_apk_path = (self.root_dir / "test_apps/android/test_app/app/build/outputs/apk/debug/app-arm64-v8a-debug.apk").absolute()
+        self.android_apk_path = (self.root_dir / "test_apps/android/test_app/app/build/outputs/apk/release/app-arm64-v8a-release.apk").absolute()
         self.android_appium_client_path = (self.root_dir / "test_apps/android/test_driver_app/target/upload").absolute()
         self.model = ModelAssets(path=(Path(__file__).parent / "../resources/add.onnx"))
         self.ios_ipa_path = (self.root_dir / "test_apps/ios/test_app/build.ios/test_app.ipa/com.company.test_app.ipa").absolute()
         self.ios_appium_client_path = (self.root_dir / "test_apps/ios/test_driver_app/target/upload").absolute()
         
+        self.ios_appcenter_owner = os.getenv("IOS_APPCENTER_OWNER") or ''
+        self.ios_appcenter_app = os.getenv("IOS_APPCENTER_APP") or ''
+        self.android_appcenter_owner = os.getenv("ANDROID_APPCENTER_OWNER") or ''
+        self.android_appcenter_app = os.getenv("ANDROID_APPCENTER_APP") or ''
 
     @staticmethod
     def run_add_model_mobile(model_runner):
@@ -49,39 +53,36 @@ class TestMobile(unittest.TestCase):
             print(f'benchmark result for device {idx}')
             print(output)
 
+    @unittest.skipUnless(platform.system().lower() == 'windows', "")
     def test_android(self):
-        owner_name = "test-owner"
-        app_name = "test-app"
         device_set_name = "pixel-4a"
-
         model_runner = AppCenterModelRunner(model=self.model, test_app=self.android_apk_path,
                                             test_driver_app=self.android_appium_client_path,
                                             output_dir=Path(__file__).parent / 'output_test_android', 
-                                            appcenter_owner=owner_name, appcenter_app=app_name, appcenter_deviceset=device_set_name)
+                                            appcenter_owner=self.android_appcenter_owner, appcenter_app=self.android_appcenter_app, appcenter_deviceset=device_set_name)
 
         self.run_add_model_mobile(model_runner)
 
+    @unittest.skipUnless(platform.system().lower() == 'darwin', "")
     def test_ios(self):
-        owner_name = "test-owner"
-        app_name = "test-app"
         device_set_name = "iphone14-16-1"
         model_runner = AppCenterModelRunner(model=self.model, test_app=self.ios_ipa_path,
                                             test_driver_app=self.ios_appium_client_path,
                                             output_dir=Path(__file__).parent / 'output_test_ios', 
-                                            appcenter_owner=owner_name, appcenter_app=app_name, appcenter_deviceset=device_set_name)
+                                            appcenter_owner=self.ios_appcenter_owner, appcenter_app=self.ios_appcenter_app, appcenter_deviceset=device_set_name)
 
         self.run_add_model_mobile(model_runner)
 
+    @unittest.skip('ignore')
     def test_avd_model_runner_android(self):
-        model = ModelAssets(path=(Path(__file__).parent / "../add.onnx"))
         model_runner = AVDModelRunner(model=self.model, test_app=self.android_apk_path, 
                                       test_driver_app=self.android_appium_client_path,
                                       output_dir=Path(__file__).parent / 'output_test_avd_model_runner_android',
                                       )
         self.run_add_model_mobile(model_runner)
 
+    @unittest.skip('ignore')
     def test_avd_model_runner_ios(self):
-        model = ModelAssets(path=(Path(__file__).parent / "../add.onnx"))
         model_runner = AVDModelRunner(model=self.model, test_app=self.ios_ipa_path, 
                                       test_driver_app=self.ios_appium_client_path,
                                       output_dir=Path(__file__).parent / 'output_test_avd_model_runner_ios',
