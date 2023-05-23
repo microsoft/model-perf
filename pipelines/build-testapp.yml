@@ -241,6 +241,11 @@ stages:
     - checkout: self
       lfs: true
     
+    - task: UsePythonVersion@0
+      displayName: 'Use Python 3.9'
+      inputs:
+        versionSpec: '3.9'
+
     - task: JavaToolInstaller@0
       displayName: 'use Java 17'
       inputs:
@@ -265,6 +270,10 @@ stages:
 
           cd $(Build.SourcesDirectory)/test_apps/ios/test_driver_app
           mvn -DskipTests -P prepare-for-upload package
+          if [ $? -ne 0 ]; then
+            echo "Build ios test driver app failed"
+            exit 1
+          fi
           python update_pom.py
 
           cd $(Build.SourcesDirectory)/test_apps/ios/test_app
@@ -272,13 +281,13 @@ stages:
           chmod +x ./build_iphoneos.sh
           echo "./build_iphoneos.sh"
           ./build_iphoneos.sh
-          if [ $? -eq 0 ]; then
+          if [ $? -ne 0 ]; then
             echo "Build ios test app failed"
             exit 1
           fi
           echo "./create_package_iphoneos.sh"
           ./create_package_iphoneos.sh
-          if [ $? -eq 0 ]; then
+          if [ $? -ne 0 ]; then
             echo "Create ipa failed"
             exit 1
           fi
