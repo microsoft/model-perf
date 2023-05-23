@@ -225,6 +225,7 @@ stages:
       artifact: ort_1_14_0_android_armeabi-v7a
 
 - stage: BuildTestAppOnMacOS
+  dependsOn: 
   jobs:
   - job: test_app_ios
     timeoutInMinutes: 180
