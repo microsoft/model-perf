@@ -1,91 +1,130 @@
 trigger: none
 
-jobs:
-- job: test_app_windows
-  timeoutInMinutes: 180
-  displayName: 'test app windows'
+stages:
+- stage: BuildTestAppOnWindows
+  jobs:
+  - job: BuildWindowsTestApp
+    timeoutInMinutes: 60
+    displayName: 'Build Windows Test App'
 
-  pool:
-    vmImage: 'windows-2022'
+    pool:
+      vmImage: 'windows-2022'
 
-  variables:
-    artifactDir: $(Build.ArtifactStagingDirectory)
+    variables:
+      artifactDir: $(Build.ArtifactStagingDirectory)
 
-  strategy:
-    matrix:
-      'x64':
-        arch: x64
-        artifactName: ort_1_14_1_win_x64
-      'x86':
-        arch: win32
-        artifactName: ort_1_14_1_win_x86
-      'arm64':
-        arch: arm64
-        artifactName: ort_1_14_1_win_arm64
+    strategy:
+      matrix:
+        'x64':
+          arch: x64
+          artifactName: ort_1_14_1_win_x64
+        'x86':
+          arch: win32
+          artifactName: ort_1_14_1_win_x86
+        'arm64':
+          arch: arm64
+          artifactName: ort_1_14_1_win_arm64
 
-  steps:
-  - checkout: self
-    lfs: true
+    steps:
+    - checkout: self
+      lfs: true
 
-  - script: |
-      cmake -S . -B build -G "Visual Studio 17 2022" -A "$(arch)" -DUSE_ORT="1.14.1"
-      cmake --build build --config Release
-    displayName: 'Build windows test app'
-    workingDirectory: test_apps/windows_ort
+    - script: |
+        cmake -S . -B build -G "Visual Studio 17 2022" -A "$(arch)" -DUSE_ORT="1.14.1"
+        cmake --build build --config Release
+      displayName: 'Build Windows Test App'
+      workingDirectory: test_apps/windows_ort
 
-  - task: EsrpCodeSigning@3
-    inputs:
-      ConnectedServiceName: '$(service_connection)'
-      FolderPath: 'test_apps/windows_ort/build/Release'
-      Pattern: '*.dll,*.exe'
-      signConfigType: 'inlineSignParams'
-      inlineOperation: |
-        [
-        {
-          "KeyCode": "$(esrp_key_code)",
-          "OperationCode": "SigntoolSign",
-          "ToolName": "sign",
-          "ToolVersion": "1.0",
-          "Parameters": {
-          "OpusName": "Microsoft",
-          "OpusInfo": "https://www.microsoft.com",
-          "FileDigest": "/fd SHA256",
-          "PageHash": "/NPH",
-          "TimeStamp": "/tr \"$(time_stamp_server)\" /td sha256"
+    - task: EsrpCodeSigning@3
+      inputs:
+        ConnectedServiceName: '$(service_connection)'
+        FolderPath: 'test_apps/windows_ort/build/Release'
+        Pattern: '*.dll,*.exe'
+        signConfigType: 'inlineSignParams'
+        inlineOperation: |
+          [
+          {
+            "KeyCode": "$(esrp_key_code)",
+            "OperationCode": "SigntoolSign",
+            "ToolName": "sign",
+            "ToolVersion": "1.0",
+            "Parameters": {
+            "OpusName": "Microsoft",
+            "OpusInfo": "https://www.microsoft.com",
+            "FileDigest": "/fd SHA256",
+            "PageHash": "/NPH",
+            "TimeStamp": "/tr \"$(time_stamp_server)\" /td sha256"
+            }
+          },
+          {
+            "KeyCode": "$(esrp_key_code)",
+            "OperationCode": "SigntoolVerify",
+            "ToolName": "sign",
+            "ToolVersion": "1.0",
+            "Parameters": {}
           }
-        },
-        {
-          "KeyCode": "$(esrp_key_code)",
-          "OperationCode": "SigntoolVerify",
-          "ToolName": "sign",
-          "ToolVersion": "1.0",
-          "Parameters": {}
-        }
-        ]
-      SessionTimeout: '60'
-      MaxConcurrency: '50'
-      MaxRetryAttempts: '5'
+          ]
+        SessionTimeout: '60'
+        MaxConcurrency: '50'
+        MaxRetryAttempts: '5'
 
-  - script: |
-      mkdir release
-    displayName: 'Create release folder'
-    workingDirectory: test_apps/windows_ort
+    - script: |
+        mkdir release
+      displayName: 'Create Release Folder'
+      workingDirectory: test_apps/windows_ort
 
-  - task: CopyFiles@2
-    inputs:
-      SourceFolder: 'test_apps/windows_ort/build/Release'
-      Contents: |
-        *.exe
-        *.dll
-        *.lib
-      TargetFolder: 'test_apps/windows_ort/release'
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: 'test_apps/windows_ort/build/Release'
+        Contents: |
+          *.exe
+          *.dll
+          *.lib
+        TargetFolder: 'test_apps/windows_ort/release'
 
-  - task: ArchiveFiles@2
-    inputs:
-      rootFolderOrFile: 'test_apps/windows_ort/release'
-      includeRootFolder: false
-      archiveType: 'zip'
-      archiveFile: '$(artifactDir)/$(artifactName).zip'
+    - task: ArchiveFiles@2
+      inputs:
+        rootFolderOrFile: 'test_apps/windows_ort/release'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(artifactDir)/$(artifactName).zip'
 
-  - publish: $(artifactDir)
-    artifact: $(artifactName)
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: $(artifactDir)
+        artifactName: $(artifactName)
+
+- stage: PublishTestAppArtifacts
+  dependsOn:
+  - BuildTestAppOnWindows
+  jobs:
+  - job: PublishTestAppArtifacts
+    timeoutInMinutes: 180
+    displayName: 'Publish Test App Artifacts'
+
+    pool:
+      vmImage: 'windows-2022'
+
+    variables:
+      artifactDir: $(Build.ArtifactStagingDirectory)
+
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        patterns: '**/*.zip'
+        path: $(artifactDir)/test_apps
+      displayName: 'Download Test App Artifacts'
+
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: '$(artifactDir)/test_apps'
+        Contents: '**'
+        TargetFolder: '$(artifactDir)/test_apps_flattened'
+        flattenFolders: true
+      displayName: 'Copy Test App Artifacts'
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: $(artifactDir)/test_apps_flattened
+        artifactName: test_apps
+      displayName: 'Publish Test App Artifacts'
