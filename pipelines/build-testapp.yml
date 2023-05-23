@@ -265,10 +265,6 @@ stages:
 
           cd $(Build.SourcesDirectory)/test_apps/ios/test_driver_app
           mvn -DskipTests -P prepare-for-upload package
-          if [ $? -eq 0 ]; then
-            echo "build ios test driver app failed"
-            exit 1
-          fi
           python update_pom.py
 
           cd $(Build.SourcesDirectory)/test_apps/ios/test_app
