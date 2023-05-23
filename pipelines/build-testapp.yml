@@ -89,8 +89,10 @@ stages:
         archiveType: 'zip'
         archiveFile: '$(artifactDir)/$(artifactName).zip'
 
-    - publish: $(artifactDir)
-      artifact: $(artifactName)
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: $(artifactDir)
+        artifactName: $(artifactName)
 
 - stage: PublishTestAppArtifacts
   dependsOn:
@@ -113,8 +115,16 @@ stages:
         path: $(artifactDir)/test_apps
       displayName: 'Download Test App Artifacts'
 
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: '$(artifactDir)/test_apps'
+        Contents: '**'
+        TargetFolder: '$(artifactDir)/test_apps_flattened'
+        flattenFolders: true
+      displayName: 'Copy Test App Artifacts'
+
     - task: PublishPipelineArtifact@1
       inputs:
-        targetPath: $(artifactDir)/test_apps
-        artifactName: TestApps
+        targetPath: $(artifactDir)/test_apps_flattened
+        artifactName: test_apps
       displayName: 'Publish Test App Artifacts'
