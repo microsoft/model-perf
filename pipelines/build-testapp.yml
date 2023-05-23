@@ -285,6 +285,7 @@ stages:
             echo "Build ios test app failed"
             exit 1
           fi
+          chmod +x ./create_package_iphoneos.sh
           echo "./create_package_iphoneos.sh"
           ./create_package_iphoneos.sh
           if [ $? -ne 0 ]; then
