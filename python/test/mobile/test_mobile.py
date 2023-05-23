@@ -15,7 +15,7 @@ import platform
 
 class TestMobile(unittest.TestCase):
 
-    def setUp(self) -> None:
+    def setUp(self):
         self.root_dir = Path(__file__).parent / "../../.."
         self.android_apk_path = (self.root_dir / "test_apps/android/test_app/app/build/outputs/apk/release/app-arm64-v8a-release.apk").absolute()
         self.android_appium_client_path = (self.root_dir / "test_apps/android/test_driver_app/target/upload").absolute()
