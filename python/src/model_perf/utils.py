@@ -18,14 +18,14 @@ import requests
 from .logger import logger
 
 
-def download_file(url, dst_dir, override=False):
+def download_file(url, dst_dir, override=False) -> Path:
     os.makedirs(dst_dir, exist_ok=True)
     file_name = url.split('/')[-1]
-    dst_file = dst_dir + '/' + file_name
+    dst_file = Path(dst_dir + '/' + file_name).resolve()
 
     # NOTE the stream=True parameter below
-    if not os.path.exists(dst_file) or override:
-        print(f"Downloading {url}")
+    if not dst_file.exists() or override:
+        print(f"Downloading {url} to {dst_file}")
         with requests.get(url, stream=True) as r:
             r.raise_for_status()
             with open(dst_file, 'wb') as f:
@@ -244,7 +244,8 @@ def normalize(s: str):
 def run_process(args: List[str], cwd: Optional[str] = None, expect_return_codes: List[int] = [0]):
     logger.info(' '.join(args))
     ret = ''
-    with subprocess.Popen(' '.join(args), stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=cwd, shell=True) as p:
+    with subprocess.Popen(' '.join(args), stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=cwd,
+                          shell=True) as p:
         if p.stdout is not None:
             for line in p.stdout:
                 ret += line
