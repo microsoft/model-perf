@@ -54,6 +54,7 @@ jobs:
     artifact: $(artifactName)
 
   - task: EsrpRelease@2
+    condition: eq('$(release)','true')
     inputs:
       ConnectedServiceName: '$(service_connection)'
       Intent: 'PackageDistribution'
@@ -120,6 +121,7 @@ jobs:
     artifact: $(artifactName)
 
   - task: EsrpRelease@2
+    condition: eq('$(release)','true')
     inputs:
       ConnectedServiceName: '$(service_connection)'
       Intent: 'PackageDistribution'
