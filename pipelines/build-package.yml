@@ -53,7 +53,17 @@ jobs:
   - publish: $(artifactDir)
     artifact: $(artifactName)
 
-  # add esrp release later
+  - task: EsrpRelease@2
+    inputs:
+      ConnectedServiceName: '$(service_connection)'
+      Intent: 'PackageDistribution'
+      ContentType: 'PyPi'
+      PackageLocation: '$(artifactDir)'
+      Owners: '$(esrp_owner)'
+      Approvers: '$(esrp_approver)'
+      ServiceEndpointUrl: '$(endpoint_url)'
+      MainPublisher: 'MLInference'
+      DomainTenantId: '$(tenant_id)'
 
 
 - job: model_perf_linux_x64
@@ -108,3 +118,15 @@ jobs:
 
   - publish: $(artifactDir)
     artifact: $(artifactName)
+
+  - task: EsrpRelease@2
+    inputs:
+      ConnectedServiceName: '$(service_connection)'
+      Intent: 'PackageDistribution'
+      ContentType: 'PyPi'
+      PackageLocation: '$(artifactDir)'
+      Owners: '$(esrp_owner)'
+      Approvers: '$(esrp_approver)'
+      ServiceEndpointUrl: '$(endpoint_url)'
+      MainPublisher: 'MLInference'
+      DomainTenantId: '$(tenant_id)'
