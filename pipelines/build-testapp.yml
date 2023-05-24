@@ -292,8 +292,27 @@ stages:
             echo "Create ipa failed"
             exit 1
           fi
-          artifactName="ort_1_14_0_ios_arm64"
-          cp build.ios/test_app.ipa/com.company.test_app.ipa "$(Build.ArtifactStagingDirectory)/$artifactName"
+
+    - task: EsrpCodeSigning@3
+      inputs:
+        ConnectedServiceName: 'ml-inference ESRP CodeSigning service connection'
+        FolderPath: 'test_apps/ios/test_app/build.ios/test_app.ipa/'
+        Pattern: '*.ipa'
+        UseMinimatch: true
+        signConfigType: 'inlineSignParams'
+        inlineOperation: |
+          [
+          {
+            "KeyCode": "CP-233039-Apple",
+            "OperationCode": "iOSAppSign",
+            "ToolName": "sign",
+            "ToolVersion": "1.0",
+            "Parameters": {}
+          }
+          ]
+        SessionTimeout: '60'
+        MaxConcurrency: '50'
+        MaxRetryAttempts: '5'
     
     - task: PowerShell@2
       displayName: 'validate test apps for ios'
@@ -315,6 +334,8 @@ stages:
             echo "Android validation failed"
             exit 1
           }
+          artifactName="ort_1_14_0_ios_arm64"
+          cp test_apps/ios/test_app/build.ios/test_app.ipa/com.company.test_app.ipa "$(Build.ArtifactStagingDirectory)/$artifactName"
     
     - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_ios_arm64
       artifact: ort_1_14_0_ios_arm64
