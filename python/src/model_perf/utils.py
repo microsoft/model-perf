@@ -8,6 +8,7 @@ import re
 import signal
 import statistics
 import subprocess
+import sys
 import zipfile
 from pathlib import Path
 from typing import List, Any, Optional
@@ -18,22 +19,43 @@ import requests
 from .logger import logger
 
 
-def download_file(url, dst_dir, override=False) -> Path:
+def get_datadir() -> Path:
+    """
+    Returns a parent directory path
+    where persistent application data can be stored.
+
+    # linux: ~/.local/share
+    # macOS: ~/Library/Application Support
+    # windows: C:/Users/<USER>/AppData/Roaming
+    """
+
+    home = Path.home()
+    if sys.platform.startswith('win'):
+        return home / "AppData/Roaming"
+    elif sys.platform.startswith('linux'):
+        return home / ".local/share"
+    elif sys.platform.startswith('darwin'):
+        return home / "Library/Application Support"
+
+
+def download_file(url, override=False) -> Path:
+    dst_dir = get_datadir() / 'model-perf'
+
     os.makedirs(dst_dir, exist_ok=True)
     file_name = url.split('/')[-1]
-    dst_file = Path(dst_dir + '/' + file_name).resolve()
+    dst_file = Path(dst_dir / file_name).resolve()
 
     # NOTE the stream=True parameter below
-    if not dst_file.exists() or override:
-        print(f"Downloading {url} to {dst_file}")
-        with requests.get(url, stream=True) as r:
-            r.raise_for_status()
-            with open(dst_file, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    f.write(chunk)
-        print('\n')
-    else:
+    if dst_file.exists() and not override:
         print(f'File {dst_file} already exists, skip downloading')
+        return dst_file
+
+    print(f"Downloading {url} to {dst_file}")
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        with open(dst_file, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                f.write(chunk)
 
     return dst_file
 
