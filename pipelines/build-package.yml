@@ -1,132 +1,158 @@
 trigger: none
 
-jobs:
-- job: model_perf_win_x64
-  timeoutInMinutes: 180
-  displayName: 'model-perf wheel win-x64'
+stages:
+- stage: BuildPythonPackageOnWindows
+  jobs:
+  - job: model_perf_win_x64
+    timeoutInMinutes: 180
+    displayName: 'model-perf wheel win-x64'
 
-  pool:
-    vmImage: 'windows-2022'
+    pool:
+      vmImage: 'windows-2022'
 
-  variables:
-    artifactDir: $(Build.ArtifactStagingDirectory)
+    variables:
+      artifactDir: $(Build.ArtifactStagingDirectory)
 
-  strategy:
-    matrix:
-      'py37':
-        pythonVer: 3.7
-        artifactName: model-perf-python37-win-x64
-      'py38':
-        pythonVer: 3.8
-        artifactName: model-perf-python38-win-x64
-      'py39':
-        pythonVer: 3.9
-        artifactName: model-perf-python39-win-x64
-      'py310':
-        pythonVer: 3.10
-        artifactName: model-perf-python310-win-x64
+    strategy:
+      matrix:
+        'py37':
+          pythonVer: 3.7
+          artifactName: model-perf-python37-win-x64
+        'py38':
+          pythonVer: 3.8
+          artifactName: model-perf-python38-win-x64
+        'py39':
+          pythonVer: 3.9
+          artifactName: model-perf-python39-win-x64
+        'py310':
+          pythonVer: 3.10
+          artifactName: model-perf-python310-win-x64
 
-  steps:
-  - checkout: self
-    lfs: true
+    steps:
+    - checkout: self
+      lfs: true
 
-  - task: UsePythonVersion@0
-    displayName: 'Use python $(pythonVer)'
-    inputs:
-      versionSpec: $(pythonVer)
+    - task: UsePythonVersion@0
+      displayName: 'Use python $(pythonVer)'
+      inputs:
+        versionSpec: $(pythonVer)
 
-  - script: |
-      python -m pip install --upgrade pip setuptools wheel twine build virtualenv mypy
-    workingDirectory: .
-    displayName: Install dependent tools
+    - script: |
+        python -m pip install --upgrade pip setuptools wheel twine build virtualenv mypy
+      workingDirectory: .
+      displayName: Install dependent tools
 
-  - script: |
-      cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DPYTHON="$(pythonVer)"
-      cmake --build build --config RelWithDebInfo -- /m:4
-    displayName: 'Build model-perf wheel'
-    workingDirectory: .
+    - script: |
+        cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DPYTHON="$(pythonVer)"
+        cmake --build build --config RelWithDebInfo -- /m:4
+      displayName: 'Build model-perf wheel'
+      workingDirectory: .
 
-  - script: |
-      cp python/dist/*.whl $(artifactDir)
-    displayName: Copy targets to staging folder
+    - script: |
+        cp python/dist/*.whl $(artifactDir)
+      displayName: Copy targets to staging folder
 
-  - publish: $(artifactDir)
-    artifact: $(artifactName)
+    - publish: $(artifactDir)
+      artifact: $(artifactName)
 
-  - task: EsrpRelease@2
-    inputs:
-      ConnectedServiceName: '$(service_connection)'
-      Intent: 'PackageDistribution'
-      ContentType: 'PyPi'
-      PackageLocation: '$(artifactDir)'
-      Owners: '$(esrp_owner)'
-      Approvers: '$(esrp_approver)'
-      ServiceEndpointUrl: '$(endpoint_url)'
-      MainPublisher: 'MLInference'
-      DomainTenantId: '$(tenant_id)'
+- stage: BuildPythonPackageOnLinux
+  dependsOn: []
+  jobs:
+  - job: model_perf_linux_x64
+    timeoutInMinutes: 180
+    displayName: 'model-perf wheel linux-x64'
 
+    pool:
+      vmImage: 'ubuntu-22.04'
 
-- job: model_perf_linux_x64
-  timeoutInMinutes: 180
-  displayName: 'model-perf wheel linux-x64'
+    variables:
+      artifactDir: $(Build.ArtifactStagingDirectory)
 
-  pool:
-    vmImage: 'ubuntu-22.04'
+    strategy:
+      matrix:
+        'py37':
+          pythonVer: 3.7
+          artifactName: model-perf-python37-linux-x64
+        'py38':
+          pythonVer: 3.8
+          artifactName: model-perf-python38-linux-x64
+        'py39':
+          pythonVer: 3.9
+          artifactName: model-perf-python39-linux-x64
+        'py310':
+          pythonVer: 3.10
+          artifactName: model-perf-python310-linux-x64
 
-  variables:
-    artifactDir: $(Build.ArtifactStagingDirectory)
+    steps:
+    - checkout: self
+      lfs: true
 
-  strategy:
-    matrix:
-      'py37':
-        pythonVer: 3.7
-        artifactName: model-perf-python37-linux-x64
-      'py38':
-        pythonVer: 3.8
-        artifactName: model-perf-python38-linux-x64
-      'py39':
-        pythonVer: 3.9
-        artifactName: model-perf-python39-linux-x64
-      'py310':
-        pythonVer: 3.10
-        artifactName: model-perf-python310-linux-x64
+    - task: UsePythonVersion@0
+      displayName: 'Use python $(pythonVer)'
+      inputs:
+        versionSpec: $(pythonVer)
 
-  steps:
-  - checkout: self
-    lfs: true
+    - script: |
+        python -m pip install --upgrade pip setuptools wheel twine build virtualenv mypy
+      workingDirectory: .
+      displayName: Install dependent tools
 
-  - task: UsePythonVersion@0
-    displayName: 'Use python $(pythonVer)'
-    inputs:
-      versionSpec: $(pythonVer)
+    - script: |
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPYTHON="$(pythonVer)"
+        cmake --build build -j4
+        export CTEST_OUTPUT_ON_FAILURE=TRUE
+      displayName: 'Build model-perf wheel'
+      workingDirectory: .
 
-  - script: |
-      python -m pip install --upgrade pip setuptools wheel twine build virtualenv mypy
-    workingDirectory: .
-    displayName: Install dependent tools
+    - script: |
+        cp python/dist/*.whl $(artifactDir)
+      displayName: Copy targets to staging folder
 
-  - script: |
-      cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPYTHON="$(pythonVer)"
-      cmake --build build -j4
-      export CTEST_OUTPUT_ON_FAILURE=TRUE
-    displayName: 'Build model-perf wheel'
-    workingDirectory: .
+    - publish: $(artifactDir)
+      artifact: $(artifactName)
 
-  - script: |
-      cp python/dist/*.whl $(artifactDir)
-    displayName: Copy targets to staging folder
+- stage: ReleasePythonPackages
+  dependsOn:
+  - BuildPythonPackageOnWindows
+  - BuildPythonPackageOnLinux
+  jobs:
+  - job: ReleasePythonPackages
+    timeoutInMinutes: 180
+    displayName: 'Release model-perf Python Packages'
 
-  - publish: $(artifactDir)
-    artifact: $(artifactName)
+    pool:
+      vmImage: 'windows-2022'
 
-  - task: EsrpRelease@2
-    inputs:
-      ConnectedServiceName: '$(service_connection)'
-      Intent: 'PackageDistribution'
-      ContentType: 'PyPi'
-      PackageLocation: '$(artifactDir)'
-      Owners: '$(esrp_owner)'
-      Approvers: '$(esrp_approver)'
-      ServiceEndpointUrl: '$(endpoint_url)'
-      MainPublisher: 'MLInference'
-      DomainTenantId: '$(tenant_id)'
+    variables:
+      artifactDir: $(Build.ArtifactStagingDirectory)
+
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        patterns: '**/*.whl'
+        path: $(artifactDir)/python_packages
+      displayName: 'Download Python Packages'
+
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: '$(artifactDir)/python_packages'
+        Contents: '**'
+        TargetFolder: '$(artifactDir)/python_packages_flattened'
+        flattenFolders: true
+      displayName: 'Copy Python Packages'
+
+    - publish: $(artifactDir)/python_packages_flattened
+      artifact: model-perf
+
+    - task: EsrpRelease@2
+      condition: eq(variables.release, 'true')
+      inputs:
+        ConnectedServiceName: '$(service_connection)'
+        Intent: 'PackageDistribution'
+        ContentType: 'PyPi'
+        PackageLocation: '$(artifactDir)/python_packages_flattened'
+        Owners: '$(esrp_owner)'
+        Approvers: '$(esrp_approver)'
+        ServiceEndpointUrl: '$(endpoint_url)'
+        MainPublisher: 'MLInference'
+        DomainTenantId: '$(tenant_id)'
