@@ -331,11 +331,11 @@ stages:
           npm install -g appcenter-cli 2>&1
           python $(Build.SourcesDirectory)/python/test/mobile/test_mobile.py
           if ($LASTEXITCODE -ne 0) {
-            echo "Android validation failed"
+            echo "ios validation failed"
             exit 1
           }
-          artifactName="ort_1_14_0_ios_arm64"
-          cp test_apps/ios/test_app/build.ios/test_app.ipa/com.company.test_app.ipa "$(Build.ArtifactStagingDirectory)/$artifactName"
+          $artifactName="ort_1_14_0_ios_arm64"
+          cp test_apps/ios/test_app/build.ios/test_app.ipa/com.company.test_app.ipa "$(Build.ArtifactStagingDirectory)/${artifactName}"
     
     - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_ios_arm64
       artifact: ort_1_14_0_ios_arm64
