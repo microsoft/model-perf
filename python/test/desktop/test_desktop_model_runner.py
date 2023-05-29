@@ -9,7 +9,7 @@ import numpy
 
 from model_perf import metrics
 from model_perf.dataset.msgpack_helper import deserialize_dataset
-from model_perf.desktop import DesktopModelRunner
+from model_perf.desktop import DesktopModelRunner, WindowsTestApp
 from model_perf.model.model_assets import ModelAssets
 
 
@@ -94,13 +94,13 @@ class TestDesktopModelRunner(unittest.TestCase):
         print(benchmark_outputs)
 
     def test_greater_model_with_win_x64_app(self):
-        self.run_greater_model_with_test_app(self.greater_model_path, '../../../test_apps/windows_ort/build/Release/test_app.exe', './output_greater')
+        self.run_greater_model_with_test_app(self.greater_model_path, WindowsTestApp.ONNXRUNTIME_LATEST_X64, './output_greater')
 
     def test_identity_model_with_win_x64_app(self):
-        self.run_identity_model_with_test_app(self.identity_model_path, '../../../test_apps/windows_ort/build/Release/test_app.exe', './output_identity')
+        self.run_identity_model_with_test_app(self.identity_model_path, WindowsTestApp.ONNXRUNTIME_1_14_1_X64, './output_identity')
 
     def test_add_model_with_win_x86_app(self):
-        self.run_add_model_with_test_app(self.add_model_path, '../../../test_apps/windows_ort/build/Release/test_app.exe', './output_add')
+        self.run_add_model_with_test_app(self.add_model_path, WindowsTestApp.ONNXRUNTIME_LATEST_X86, './output_add')
 
     @unittest.skip('ignore')
     def test_deserialize_inputs(self):
