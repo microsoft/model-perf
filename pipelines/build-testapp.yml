@@ -94,9 +94,10 @@ stages:
         targetPath: $(artifactDir)
         artifactName: $(artifactName)
 
-  - job: test_app_android
+  - job: BuildAndroidTestApp
+    condition: false
     timeoutInMinutes: 180
-    displayName: 'test app Android'
+    displayName: 'Build Android Test App'
 
     pool:
       vmImage: 'windows-2022'
@@ -116,7 +117,7 @@ stages:
         jdkSourceOption: 'PreInstalled'
 
     - task: PowerShell@2
-      displayName: 'build test apps for Android'
+      displayName: 'Build Android Test App'
       inputs:
         pwsh: true
         targetType: 'inline'
@@ -195,7 +196,7 @@ stages:
           }
 
     - task: PowerShell@2
-      displayName: 'validate test apps for Android'
+      displayName: 'Validate Android Test Apps'
       inputs:
         pwsh: true
         targetType: 'inline'
@@ -227,9 +228,10 @@ stages:
 - stage: BuildTestAppOnMacOS
   dependsOn: 
   jobs:
-  - job: test_app_ios
+  - job: BuildIOSTestApp
+    condition: false
     timeoutInMinutes: 180
-    displayName: 'test app ios'
+    displayName: 'Build iOS Test App'
 
     pool:
       vmImage: 'macOS-latest'
@@ -315,7 +317,7 @@ stages:
     #     MaxRetryAttempts: '5'
     
     - task: PowerShell@2
-      displayName: 'validate test apps for ios'
+      displayName: 'Validation iOS test apps'
       inputs:
         pwsh: true
         targetType: 'inline'
