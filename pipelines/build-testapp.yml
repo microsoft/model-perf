@@ -215,15 +215,14 @@ stages:
             exit 1
           }
 
-    # disable publish due to signgin issues
-    # - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_x86
-    #   artifact: ort_1_14_0_android_x86
-    # - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_x86_64
-    #   artifact: ort_1_14_0_android_x86_64
-    # - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_arm64-v8a
-    #   artifact: ort_1_14_0_android_arm64-v8a
-    # - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_armeabi-v7a
-    #   artifact: ort_1_14_0_android_armeabi-v7a
+    - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_x86
+      artifact: ort_1_14_0_android_x86
+    - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_x86_64
+      artifact: ort_1_14_0_android_x86_64
+    - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_arm64-v8a
+      artifact: ort_1_14_0_android_arm64-v8a
+    - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_armeabi-v7a
+      artifact: ort_1_14_0_android_armeabi-v7a
 
 - stage: BuildTestAppOnMacOS
   dependsOn: 
@@ -338,9 +337,8 @@ stages:
           $artifactName="ort_1_14_0_ios_arm64"
           cp $(Build.SourcesDirectory)/test_apps/ios/test_app/build.ios/test_app.ipa/com.company.test_app.ipa "$(Build.ArtifactStagingDirectory)/${artifactName}"
     
-    # disable publish due to signgin issues
-    # - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_ios_arm64
-    #   artifact: ort_1_14_0_ios_arm64
+    - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_ios_arm64
+      artifact: ort_1_14_0_ios_arm64
 
 - stage: PublishTestAppArtifacts
   dependsOn:
