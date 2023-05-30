@@ -94,9 +94,256 @@ stages:
         targetPath: $(artifactDir)
         artifactName: $(artifactName)
 
+  - job: BuildAndroidTestApp
+    timeoutInMinutes: 180
+    displayName: 'Build Android Test App'
+
+    pool:
+      vmImage: 'windows-2022'
+
+    variables:
+    - group: model-perf-variables
+      
+    steps:
+    - checkout: self
+      lfs: true
+    
+    - task: JavaToolInstaller@0
+      displayName: 'use Java 17'
+      inputs:
+        versionSpec: '17'
+        jdkArchitectureOption: 'x64'
+        jdkSourceOption: 'PreInstalled'
+
+    - task: PowerShell@2
+      displayName: 'Build Android Test App'
+      inputs:
+        pwsh: true
+        targetType: 'inline'
+        failOnStderr: false
+        script: |
+          cd $(Build.SourcesDirectory)/test_apps/android/test_driver_app
+          mvn -DskipTests -P prepare-for-upload package
+          if ($LASTEXITCODE -ne 0) {
+            echo "Build test driver_app failed"
+            exit 1
+          }
+          python update_pom.py
+
+          cd $(Build.SourcesDirectory)/test_apps/android/test_app
+          ./gradlew assembleRelease -PUSE_ORT="1.14.0"
+          
+          if ($LASTEXITCODE -ne 0) {
+            echo "gradle build failed"
+            exit 1
+          }
+          
+          $env:Path += ";$env:ANDROID_HOME\build-tools\32.0.0"
+          $abis = "x86", "x86_64", "arm64-v8a", "armeabi-v7a"
+          keytool -genkey -noprompt -v -keystore release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias model-perf -storepass password -keypass password -dname "CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, S=Unknown, C=Unknown"
+          foreach ($abi in $abis) {
+            zipalign -v -p 4 app/build/outputs/apk/release/app-$abi-release-unsigned.apk app/build/outputs/apk/release/app-$abi-release-unsigned-aligned.apk
+            apksigner sign --ks release-key.jks --ks-pass pass:password --out app/build/outputs/apk/release/app-$abi-release.apk app/build/outputs/apk/release/app-$abi-release-unsigned-aligned.apk
+            if ($LASTEXITCODE -ne 0) {
+              echo "apksigner failed"
+              exit 1
+            }
+          }
+
+    # - task: EsrpCodeSigning@3
+    #   inputs:
+    #     ConnectedServiceName: 'ml-inference ESRP CodeSigning service connection'
+    #     FolderPath: 'test_apps/android/test_app/app/build/outputs/apk/release/'
+    #     Pattern: '*-release.apk'
+    #     UseMinimatch: true
+    #     signConfigType: 'inlineSignParams'
+    #     inlineOperation: |
+    #       [
+    #       {
+    #           "KeyCode" : "CP-232601-Java",
+    #           "OperationCode" : "AndroidSign",
+    #           "Parameters" : {},
+    #           "ToolName" : "sign",
+    #           "ToolVersion" : "1.0"
+    #       },
+    #       {
+    #           "KeyCode" : "CP-232601-Java",
+    #           "OperationCode" : "JavaVerify",
+    #           "Parameters" : {},
+    #           "ToolName" : "sign",
+    #           "ToolVersion" : "1.0"
+    #       }
+    #       ]
+    #     SessionTimeout: '60'
+    #     MaxConcurrency: '50'
+    #     MaxRetryAttempts: '5'
+
+    - task: PowerShell@2
+      displayName: 'Copy '
+      inputs:
+        pwsh: true
+        targetType: 'inline'
+        failOnStderr: false
+        script: |
+          cd $(Build.SourcesDirectory)/test_apps/android/test_app
+          $abis = "x86", "x86_64", "arm64-v8a", "armeabi-v7a"
+          foreach ($abi in $abis) {
+            $artifactName="ort_1_14_0_android_$abi"
+            $outputFolder="$(Build.ArtifactStagingDirectory)/$artifactName"
+            mkdir -Force $outputFolder
+            cp app/build/outputs/apk/release/app-$abi-release.apk $outputFolder
+          }
+
+    - task: PowerShell@2
+      displayName: 'Validate Android Test Apps'
+      inputs:
+        pwsh: true
+        targetType: 'inline'
+        failOnStderr: false
+        script: |
+          cd $(Build.SourcesDirectory)/python
+          python -m pip install -e .
+          $env:APPCENTER_TOKEN='$(APPCENTER-TOKEN-UNIVERSAL)'
+          $env:IOS_APPCENTER_OWNER='$(APPCENTER-OWNER)'
+          $env:IOS_APPCENTER_APP='$(IOS-APPCENTER-APP)'
+          $env:ANDROID_APPCENTER_OWNER='$(APPCENTER-OWNER)'
+          $env:ANDROID_APPCENTER_APP='$(ANDROID-APPCENTER-APP)'
+          npm install -g appcenter-cli 2>&1
+          python $(Build.SourcesDirectory)/python/test/mobile/test_mobile.py
+          if ($LASTEXITCODE -ne 0) {
+            echo "Android validation failed"
+            exit 1
+          }
+
+    - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_x86
+      artifact: ort_1_14_0_android_x86
+    - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_x86_64
+      artifact: ort_1_14_0_android_x86_64
+    - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_arm64-v8a
+      artifact: ort_1_14_0_android_arm64-v8a
+    - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_armeabi-v7a
+      artifact: ort_1_14_0_android_armeabi-v7a
+
+- stage: BuildTestAppOnMacOS
+  dependsOn: 
+  jobs:
+  - job: BuildIOSTestApp
+    timeoutInMinutes: 180
+    displayName: 'Build iOS Test App'
+
+    pool:
+      vmImage: 'macOS-12'
+
+    variables:
+    - group: model-perf-variables
+
+    steps:
+    - checkout: self
+      lfs: true
+    
+    - task: UsePythonVersion@0
+      displayName: 'Use Python 3.9'
+      inputs:
+        versionSpec: '3.9'
+
+    - task: JavaToolInstaller@0
+      displayName: 'use Java 17'
+      inputs:
+        versionSpec: '17'
+        jdkArchitectureOption: 'x64'
+        jdkSourceOption: 'PreInstalled'
+
+    - task: InstallAppleCertificate@2
+      inputs:
+        certSecureFile: 'model-perf.p12'
+        certPwd: '$(model-perf-P12password)'
+    
+    - task: InstallAppleProvisioningProfile@1
+      inputs:
+        provProfileSecureFile: 'model-perf.mobileprovision'
+
+    - task: Bash@3
+      displayName: 'Build iOS test app'
+      inputs:
+        targetType: 'inline'
+        script: |
+
+          cd $(Build.SourcesDirectory)/test_apps/ios/test_driver_app
+          mvn -DskipTests -P prepare-for-upload package
+          if [ $? -ne 0 ]; then
+            echo "Build ios test driver app failed"
+            exit 1
+          fi
+          python update_pom.py
+
+          cd $(Build.SourcesDirectory)/test_apps/ios/test_app
+          rm -rf ./build.ios
+          chmod +x ./build_iphoneos.sh
+          echo "./build_iphoneos.sh"
+          ./build_iphoneos.sh
+          if [ $? -ne 0 ]; then
+            echo "Build ios test app failed"
+            exit 1
+          fi
+          chmod +x ./create_package_iphoneos.sh
+          echo "./create_package_iphoneos.sh"
+          ./create_package_iphoneos.sh
+          if [ $? -ne 0 ]; then
+            echo "Create ipa failed"
+            exit 1
+          fi
+
+    # - task: EsrpCodeSigning@3
+    #   inputs:
+    #     ConnectedServiceName: 'ml-inference ESRP CodeSigning service connection'
+    #     FolderPath: 'test_apps/ios/test_app/build.ios/test_app.ipa/'
+    #     Pattern: '*.ipa'
+    #     UseMinimatch: true
+    #     signConfigType: 'inlineSignParams'
+    #     inlineOperation: |
+    #       [
+    #       {
+    #         "KeyCode": "CP-233039-Apple",
+    #         "OperationCode": "iOSAppSign",
+    #         "ToolName": "sign",
+    #         "ToolVersion": "1.0",
+    #         "Parameters": {}
+    #       }
+    #       ]
+    #     SessionTimeout: '60'
+    #     MaxConcurrency: '50'
+    #     MaxRetryAttempts: '5'
+    
+    - task: PowerShell@2
+      displayName: 'Validation iOS test apps'
+      inputs:
+        pwsh: true
+        targetType: 'inline'
+        failOnStderr: false
+        script: |
+          cd $(Build.SourcesDirectory)/python
+          python -m pip install -e .
+          $env:APPCENTER_TOKEN='$(APPCENTER-TOKEN-UNIVERSAL)'
+          $env:IOS_APPCENTER_OWNER='$(APPCENTER-OWNER)'
+          $env:IOS_APPCENTER_APP='$(IOS-APPCENTER-APP)'
+          $env:ANDROID_APPCENTER_OWNER='$(APPCENTER-OWNER)'
+          $env:ANDROID_APPCENTER_APP='$(ANDROID-APPCENTER-APP)'
+          npm install -g appcenter-cli 2>&1
+          python $(Build.SourcesDirectory)/python/test/mobile/test_mobile.py
+          if ($LASTEXITCODE -ne 0) {
+            echo "ios validation failed"
+            exit 1
+          }
+          $artifactName="ort_1_14_0_ios_arm64"
+          cp $(Build.SourcesDirectory)/test_apps/ios/test_app/build.ios/test_app.ipa/com.company.test_app.ipa "$(Build.ArtifactStagingDirectory)/${artifactName}"
+    
+    - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_ios_arm64
+      artifact: ort_1_14_0_ios_arm64
+
 - stage: PublishTestAppArtifacts
   dependsOn:
   - BuildTestAppOnWindows
+  - BuildTestAppOnMacOS
   jobs:
   - job: PublishTestAppArtifacts
     timeoutInMinutes: 180

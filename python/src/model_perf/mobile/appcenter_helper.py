@@ -102,7 +102,7 @@ class AppCenterHelper:
 
         run_args.extend(["--token", self.api_token])
 
-        run_args.extend(["--vsts-id-variable", f"TEST_RUN_ID", "--debug"])
+        run_args.extend(["--vsts-id-variable", f"TEST_RUN_ID", "--debug", "--test-parameter", "jdk=zulu-11"])
         logger.info(' '.join(run_args))
 
         ret = run_process(args=run_args)
