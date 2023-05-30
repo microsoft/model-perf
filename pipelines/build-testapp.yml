@@ -95,7 +95,6 @@ stages:
         artifactName: $(artifactName)
 
   - job: BuildAndroidTestApp
-    condition: false
     timeoutInMinutes: 180
     displayName: 'Build Android Test App'
 
@@ -216,25 +215,25 @@ stages:
             exit 1
           }
 
-    - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_x86
-      artifact: ort_1_14_0_android_x86
-    - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_x86_64
-      artifact: ort_1_14_0_android_x86_64
-    - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_arm64-v8a
-      artifact: ort_1_14_0_android_arm64-v8a
-    - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_armeabi-v7a
-      artifact: ort_1_14_0_android_armeabi-v7a
+    # disable publish due to signgin issues
+    # - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_x86
+    #   artifact: ort_1_14_0_android_x86
+    # - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_x86_64
+    #   artifact: ort_1_14_0_android_x86_64
+    # - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_arm64-v8a
+    #   artifact: ort_1_14_0_android_arm64-v8a
+    # - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_android_armeabi-v7a
+    #   artifact: ort_1_14_0_android_armeabi-v7a
 
 - stage: BuildTestAppOnMacOS
   dependsOn: 
   jobs:
   - job: BuildIOSTestApp
-    condition: false
     timeoutInMinutes: 180
     displayName: 'Build iOS Test App'
 
     pool:
-      vmImage: 'macOS-latest'
+      vmImage: 'macOS-12'
 
     variables:
     - group: model-perf-variables
@@ -339,8 +338,9 @@ stages:
           $artifactName="ort_1_14_0_ios_arm64"
           cp $(Build.SourcesDirectory)/test_apps/ios/test_app/build.ios/test_app.ipa/com.company.test_app.ipa "$(Build.ArtifactStagingDirectory)/${artifactName}"
     
-    - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_ios_arm64
-      artifact: ort_1_14_0_ios_arm64
+    # disable publish due to signgin issues
+    # - publish: $(Build.ArtifactStagingDirectory)/ort_1_14_0_ios_arm64
+    #   artifact: ort_1_14_0_ios_arm64
 
 - stage: PublishTestAppArtifacts
   dependsOn:
