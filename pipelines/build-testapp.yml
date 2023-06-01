@@ -261,6 +261,12 @@ stages:
     - task: InstallAppleProvisioningProfile@1
       inputs:
         provProfileSecureFile: 'model-perf.mobileprovision'
+    
+    - task: DownloadSecureFile@1
+      name: model-perf.mobileprovision
+      displayName: 'Download iOS certificate'
+      inputs:
+        secureFile: 'model-perf.mobileprovision'
 
     - task: Bash@3
       displayName: 'Build iOS test app'
