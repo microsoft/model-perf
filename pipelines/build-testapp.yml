@@ -327,6 +327,7 @@ stages:
           cp $(Build.SourcesDirectory)/test_apps/ios/test_app/build.ios/test_app.ipa/*.plist distribution/
           cd distribution
           zip -r distribution.zip *.plist *.mobileprovision *.ipa
+          mkdir "$(Build.ArtifactStagingDirectory)/${artifactName}"
           cp distribution.zip "$(Build.ArtifactStagingDirectory)/${artifactName}"
     
 
