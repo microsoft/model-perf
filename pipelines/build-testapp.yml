@@ -263,7 +263,7 @@ stages:
         provProfileSecureFile: 'model-perf.mobileprovision'
     
     - task: DownloadSecureFile@1
-      name: model-perf.mobileprovision
+      name: mode_perf_mobileprovision
       displayName: 'Download iOS certificate'
       inputs:
         secureFile: 'model-perf.mobileprovision'
@@ -323,7 +323,7 @@ stages:
           rm -rf distribution
           mkdir distribution
           cp $(Build.SourcesDirectory)/test_apps/ios/test_app/build.ios/test_app.ipa/com.company.test_app.ipa distribution/
-          cp $(model-perf.mobileprovision.secureFilePath) distribution/
+          cp $(mode_perf_mobileprovision.secureFilePath) distribution/
           cp $(Build.SourcesDirectory)/test_apps/ios/test_app/build.ios/test_app.ipa/*.plist distribution/
           cd distribution
           zip -r distribution.zip *.plist *.mobileprovision *.ipa
