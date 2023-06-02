@@ -3,6 +3,7 @@
 
 import setuptools
 from setuptools.dist import Distribution
+from glob import glob
 
 
 class BinaryDistribution(Distribution):
@@ -12,5 +13,9 @@ class BinaryDistribution(Distribution):
 
 setuptools.setup(
     distclass=BinaryDistribution,
-    include_package_data=True
+    include_package_data=True,
+    data_files=[("model_perf/cpp/load_gen", glob('src/model_perf/cpp/load_gen/*.*', recursive=True)),
+                ("model_perf/cpp/test_app_common", glob('src/model_perf/cpp/test_app_common/*.*', recursive=True)),
+                ("model_perf/cpp/test_app_common/ort", glob('src/model_perf/cpp/test_app_common/ort/*.*', recursive=True)),
+                ("model_perf/third_party", glob('src/model_perf/third_party/*.*', recursive=True))],
 )

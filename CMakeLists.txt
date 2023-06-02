@@ -11,6 +11,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(PYTHON
     ""
     CACHE STRING "set which version of python to use, default to auto detect")
+set(CMAKE_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 option(PY_LOAD_GEN "build load gen python interface" ON)
 
 include(cmake/policy.cmake)
