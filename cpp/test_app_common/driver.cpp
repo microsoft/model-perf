@@ -3,7 +3,9 @@
 
 
 #include "driver.h"
+#ifdef USE_ORT
 #include "ort/ort_data_conversion.h"
+#endif
 #include "single_stream_load_gen.h"
 #include "str_utils.h"
 
@@ -54,7 +56,11 @@ Driver::Driver(const std::string& config_path) {
 
     // create ort inference session
     metrics_logger_.AddInstantEvent("CreateInferenceSessionStart", "Event", pid_, {});
+#ifdef USE_ORT
     inference_session_ptr_ = std::make_unique<OrtSession>(config_);
+#else
+    // TODO: add support for other inference sessions
+#endif
     metrics_logger_.AddInstantEvent("CreateInferenceSessionEnd", "Event", pid_, {});
 
     // Sleep 200 milliseconds for monitoring thread to collect metric
@@ -91,9 +97,9 @@ void Driver::ReadInputs() {
     // deserialize inputs, deserialized object is valid during the msgpack::object_handle instance is alive.
     inputs_handle_ = msgpack::unpack(inputs_buffer.data(), inputs_buffer.size());
     msgpack::object const& obj = inputs_handle_.get();
-
+#ifdef USE_ORT
     inputs_ = obj.as<std::vector<std::vector<Ort::Value>>>();
-
+#endif
     if (inputs_.size() == 0) {
         throw std::runtime_error("No model inputs found");
     }
@@ -108,12 +114,17 @@ void Driver::RunModel() {
     metrics_logger_.AddInstantEvent("RunModelStart", "Event", pid_, {});
 
     // run model
+#ifdef USE_ORT
     std::vector<std::vector<Ort::Value>> outputs;
     for (int k = 0; k < inputs_.size(); k++) {
         std::vector<Ort::Value>& input = inputs_[k];
         std::vector<Ort::Value> output_tensors = inference_session_ptr_->Run(input);
         outputs.emplace_back(std::move(output_tensors));
     }
+#else
+    // TODO: add support for other inference sessions
+    std::vector<std::vector<float>> outputs;
+#endif
 
     // Sleep 200 milliseconds waiting for monitoring thread to collect metric
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -147,8 +158,9 @@ void Driver::RunPerfTest() {
     // run perf test
     do {
         q = load_gen.IssueQuery().front();
-
+#ifdef USE_ORT
         inference_session_ptr_->Run(inputs_[0]);
+#endif
 
         perf_result.CompleteQuery(q->id, false);
     } while (q->id >= 0);
