@@ -27,13 +27,13 @@ std::shared_ptr<Query> LoadGen::IssueQuery() {
 
     std::shared_ptr<Query> q = std::make_shared<Query>();
     q->issued_at = now;
-    issued_query_count_++;
     int64_t span = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_).count();
     if (span >= min_duration_ms_ && issued_query_count_ >= min_query_count_) {
         q->id = -1;
         return q;
     }
 
+    issued_query_count_++;
     q->id = (next_query_id_++);
     if (result_) {
         result_->AddQuery(q);
