@@ -4,11 +4,13 @@
 import logging
 import sys
 
-logger = logging.getLogger('model_perf')
+logger = logging.getLogger('ModelPerf')
 logger.setLevel(logging.DEBUG)
 
 handler = logging.StreamHandler(sys.stdout)
 handler.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter(
+    "[%(asctime)s] [%(name)s] [%(levelname)s] [%(process)d:%(thread)d] %(message)s",
+)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
