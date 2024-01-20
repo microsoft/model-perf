@@ -19,6 +19,11 @@ git clone https://github.com/microsoft/model-perf.git
 python -m pip install --upgrade aiohttp[speedups] build mypy pip setuptools twine virtualenv wheel
 
 # Pay attention to the auto-detected Python intepretor path in log. If it is wrong, specify the Python version to help detect the right one.
+# Linux
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+
+# Windows
 cmake -S . -B build -A x64
 cmake --build build --config RelWithDebInfo
 ```
