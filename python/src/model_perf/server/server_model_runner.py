@@ -5,7 +5,8 @@ import threading
 import random
 import multiprocessing
 import time
-import inspect
+from typing import Optional, Type
+from types import TracebackType
 from .sync_worker import SyncWorker
 from .async_worker import AsyncWorker
 from .load_gen import ServerLoadGen, SingleStreamLoadGen, PerfResult
@@ -58,6 +59,7 @@ def Pipe(duplex=True):
     ...
 ```
 '''
+
 class ServerModelRunner:
     def __init__(self, sut_cls,
                  async_worker=False,
@@ -355,6 +357,18 @@ class ServerModelRunner:
         logger.info(self.get_report())
         return target_qps
         #raise RuntimeError(f'failed to search for the target qps, may be the p{percentile} latency of {latency_bound_ms} ms is unreachable')
+    
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
+        self.stop()
 
 if __name__ == '__main__':
     pass
