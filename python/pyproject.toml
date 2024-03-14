@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "model-perf"
-version = "0.0.1rc1"
+version = "0.1"
 authors = [{ name="Microsoft Corporation", email="ml-inference@microsoft.com" }]
 description = "Model Performance Toolkit (model-perf) is a Python package backed by test applications for different platforms (Windows/MacOS, Android/iOS, Web) to test machine learning models on different target platforms and devices (e.g., Google Pixel for Android, iPhone for iOS)."
 readme = "README.md"
