@@ -59,6 +59,7 @@ def Pipe(duplex=True):
     ...
 ```
 '''
+
 class ServerModelRunner:
     def __init__(self, sut_cls,
                  async_worker=False,
