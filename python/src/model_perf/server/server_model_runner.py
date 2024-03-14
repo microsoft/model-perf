@@ -196,7 +196,7 @@ class ServerModelRunner:
                 self.query_queue.put((q.id, None))
             pass
         
-        logger.info(f'issued all queries')
+        logger.info(f'issued all queries. note some queries may not be completed yet.')
         return self.get_report()
     
     def benchmark_single_stream(self, queries=None, min_query_count=100, min_duration_ms=30000):
