@@ -15,9 +15,6 @@ stages:
 
     strategy:
       matrix:
-        'py37':
-          pythonVer: 3.7
-          artifactName: model-perf-python37-win-x64
         'py38':
           pythonVer: 3.8
           artifactName: model-perf-python38-win-x64
@@ -27,6 +24,12 @@ stages:
         'py310':
           pythonVer: 3.10
           artifactName: model-perf-python310-win-x64
+        'py311':
+          pythonVer: 3.11
+          artifactName: model-perf-python311-win-x64
+        'py312':
+          pythonVer: 3.12
+          artifactName: model-perf-python312-win-x64
 
     steps:
     - checkout: self
@@ -70,9 +73,6 @@ stages:
 
     strategy:
       matrix:
-        'py37':
-          pythonVer: 3.7
-          artifactName: model-perf-python37-linux-x64
         'py38':
           pythonVer: 3.8
           artifactName: model-perf-python38-linux-x64
@@ -82,6 +82,12 @@ stages:
         'py310':
           pythonVer: 3.10
           artifactName: model-perf-python310-linux-x64
+        'py311':
+          pythonVer: 3.11
+          artifactName: model-perf-python311-linux-x64
+        'py312':
+          pythonVer: 3.12
+          artifactName: model-perf-python312-linux-x64
 
     steps:
     - checkout: self
