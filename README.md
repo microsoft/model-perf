@@ -1,6 +1,6 @@
 # Model Performance Toolkit
 
-Model Performance Toolkit (model-perf) is a Python package backed by test applications for different platforms (Windows/MacOS, Android/iOS, Web) to benchmark machine learning models on different target platforms and devices (e.g., Google Pixel for Android, iPhone for iOS).
+Model Performance Toolkit (model-perf) is a Python package to benchmark machine learning models running on target servers or devices.
 
 ## Installation
 
@@ -29,44 +29,7 @@ cmake --build build --config RelWithDebInfo
 ```
 
 ## Example
-### Run Android Benchmark
-```python
-from model_perf.metrics import accuracy_score
-from model_perf.mobile import AppCenterModelRunner
-from model_perf.model import ModelAssets
 
-# model runner to run model on android devices
-model_runner = AppCenterModelRunner(model=ModelAssets(path='./add.onnx'),
-                                    test_app='./test_apps/android/test_app/app-arm64-v8a-debug.apk',
-                                    test_driver_app='./test_apps/android/test_driver_app/target/upload',
-                                    output_dir='output_test_android',
-                                    appcenter_owner='test-owner',
-                                    appcenter_app='test-app',
-                                    appcenter_deviceset='pixel-4a')
-
-# inputs of model
-inputs = [[numpy.array([[1.1, 1.1]], dtype=numpy.float32), numpy.array([[2.2, 2.2]], dtype=numpy.float32)],
-          [numpy.array([[3.3, 3.3]], dtype=numpy.float32), numpy.array([[4.4, 4.4]], dtype=numpy.float32)],
-          [numpy.array([[5.5, 5.5]], dtype=numpy.float32), numpy.array([[6.6, 6.6]], dtype=numpy.float32)]]
-
-# predict and benchmark
-predict_outputs, benchmark_outputs = model_runner.predict_and_benchmark(inputs=inputs,
-                                                                        config={'model': {'input_names': ['x', 'y'], 'output_names': ['sum']}})
-
-# expected outputs of model
-expected_outputs = [[numpy.array([[3.3, 3.3]], dtype=numpy.float32)],
-                    [numpy.array([[7.7, 7.7]], dtype=numpy.float32)],
-                    [numpy.array([[12.1, 12.1]], dtype=numpy.float32)]]
-
-# calculate accuracy
-accuracy = accuracy_score(expected_outputs, predict_outputs[0])
-print(f"accuracy = {accuracy}")
-
-# print benchmark outputs
-print(benchmark_outputs[0])
-```
-
-### Run Server Benchmark
 ```python
 from model_perf.server import ServerModelRunner
 
@@ -80,16 +43,23 @@ class SystemUnderTest:
         for i in range(1, 10000):
             sum += i
 
-# model runner to run model on server
-model_runner = ServerModelRunner(SystemUnderTest, num_workers=8, num_threads=1, tensorboard=True)
+if __name__ == "__main__":
 
-# start server model runner
-model_runner.start()
-report = model_runner.benchmark(queries=[(), (), ()], target_qps=10000, min_duration_ms=120000)
-model_runner.stop()
+    # model runner to run model on server
+    model_runner = ServerModelRunner(SystemUnderTest, 
+                                     num_workers=8, # each worker is a standalone process
+                                     num_threads=1, # threads per worker
+                                     tensorboard=False)
 
-# print benchmark report
-print(report)
+    # start server model runner
+    model_runner.start()
+    report = model_runner.benchmark(queries=[(), (), ()], 
+                                    target_qps=10000, 
+                                    min_duration_ms=120000)
+    model_runner.stop()
+
+    # print benchmark report
+    print(report)
 ```
 
 

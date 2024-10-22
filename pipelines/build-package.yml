@@ -30,6 +30,9 @@ stages:
         'py312':
           pythonVer: 3.12
           artifactName: model-perf-python312-win-x64
+        'py313':
+          pythonVer: 3.13
+          artifactName: model-perf-python313-win-x64
 
     steps:
     - checkout: self
@@ -88,6 +91,9 @@ stages:
         'py312':
           pythonVer: 3.12
           artifactName: model-perf-python312-linux-x64
+        'py313':
+          pythonVer: 3.13
+          artifactName: model-perf-python313-linux-x64
 
     steps:
     - checkout: self
